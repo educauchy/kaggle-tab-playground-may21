@@ -51,6 +51,13 @@ class MetaClassifier(ClassifierMixin):
         predict = self.model.predict(self.X)
         return predict
 
+    def predict_proba(self, X, y=None):
+        self.X = X.copy()
+        if 'Is_Anomaly' in self.X.columns:
+            self.X.drop(['Is_Anomaly'], axis=1, inplace=True)
+        predict = self.model.predict_proba(self.X)
+        return predict
+
     def score(self, X, y=None):
         score = self.model.score(X, y)
         return score
