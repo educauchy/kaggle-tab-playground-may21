@@ -1,26 +1,20 @@
-from src.Transformers.FeatureSelectionTransformer import FeatureSelectionTransformer
-from src.Transformers.FeatureExtractionTransformer import FeatureExtractionTransformer
-from src.Transformers.EncoderTransformer import EncoderTransformer
-from src.Transformers.AnomalyDetectionTransformer import AnomalyDetectionTransformer
-from src.Transformers.ClusteringTransformer import ClusteringTransformer
-from src.Transformers.FeatureInteractionTransformer import FeatureInteractionTransformer
-from src.Models.MetaClassifier import MetaClassifier
-from src.Helpers.helpers import gen_submit
+from ml_tools.transformers import *
+from ml_tools.models import *
+from ml_tools.helpers import *
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV, KFold, cross_val_score
 from sklearn.ensemble import RandomForestClassifier, BaggingClassifier, StackingClassifier
-from sklearn.preprocessing import FunctionTransformer
+from sklearn.preprocessing import FunctionTransformer, LabelEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
+from sklearn.metrics import log_loss
+
 import pandas as pd
 import numpy as np
 import yaml
 import os, sys
 import random
 from shutil import copyfile
-from sklearn.model_selection import KFold, cross_val_score
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.metrics import log_loss
-from sklearn.preprocessing import LabelEncoder
 
 
 try:
@@ -66,7 +60,7 @@ full_pipeline = Pipeline(steps=[
     # ('anomaly', AnomalyDetectionTransformer(type=config['model']['anomaly']['type'], \
     #                                         **config['model']['anomaly']['params'])),
     ('f_inter', FeatureInteractionTransformer(**config['model']['f_inter']['params'])),
-    ('f_selection', FeatureSelectionTransformer(**config['model']['f_selection']['params'])),
+    # ('f_selection', FeatureSelectionTransformer(**config['model']['f_selection']['params'])),
     # ('cluster', ClusteringTransformer(type=config['model']['cluster']['type'], \
     #                                   **config['model']['cluster']['params'])),
     ('model', MetaClassifier(model=config['model']['model']['type'], \
