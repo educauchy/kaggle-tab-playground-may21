@@ -5,18 +5,18 @@ from sklearn.svm import OneClassSVM
 
 
 class AnomalyDetectionTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, type: str = 'isoforest',
+    def __init__(self, method: str = 'isoforest',
                         columns: list = None,
                         **params):
         super().__init__()
-        self.type = type
+        self.method = method
         self.detectors = {
             'isoforest': IsolationForest,
             'lof': LocalOutlierFactor,
             'onesvm': OneClassSVM,
         }
         self.columns = columns
-        self.detector = self.detectors[type](**params)
+        self.detector = self.detectors[method](**params)
 
     def fit(self, X, y=None):
         print(self.detector)

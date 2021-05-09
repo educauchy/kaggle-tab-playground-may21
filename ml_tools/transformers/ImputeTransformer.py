@@ -6,18 +6,18 @@ import numpy as np
 
 
 class ImputeTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, type: str = 'KNN',
+    def __init__(self, method: str = 'KNN',
                         by_cols: dict = None,
                         **params):
         super().__init__()
-        self.type = type
+        self.method = method
         self.by_cols = by_cols
         self.imputers = {
             'KNN': KNNImputer,
             'iterative': IterativeImputer,
             'simple': SimpleImputer,
         }
-        self.imputer = self.imputers[type](**params)
+        self.imputer = self.imputers[method](**params)
 
     def _impute_by_cols(self, X, by_cols):
         if by_cols['func'] == 'count':

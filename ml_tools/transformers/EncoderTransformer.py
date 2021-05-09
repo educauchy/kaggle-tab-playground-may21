@@ -5,12 +5,12 @@ import pandas as pd
 
 
 class EncoderTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, type: str = 'label',
+    def __init__(self, method: str = 'label',
                         column: str = '',
                         out_column: str = '',
                         data: pd.Series = None):
         super().__init__()
-        self.type = type
+        self.method = method
         self.column = column
         self.out_column = out_column
         self.data = data
@@ -19,13 +19,12 @@ class EncoderTransformer(BaseEstimator, TransformerMixin):
             'ordinal': OrdinalEncoder(),
             'onehot': OneHotEncoder(categories='auto', handle_unknown='ignore')
         }
-        self.encoder = self.encoders[type]
+        self.encoder = self.encoders[method]
 
     def fit(self, X, y=None):
         self.X = X.copy()
         if self.data is None:
-            if self.type == 'onehot':
-                # print(np.array(self.X[self.column].astype(str)).reshape(-1, 1))
+            if self.method == 'onehot':
                 self.encoder.fit( np.array(self.X[self.column].astype(str)).reshape(-1, 1) )
             else:
                 self.encoder.fit(self.X[self.column].astype(str))
@@ -35,10 +34,10 @@ class EncoderTransformer(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=None):
         self.X = X.copy()
-        if self.type in ['label', 'ordinal']:
+        if self.method in ['label', 'ordinal']:
             self.X[self.out_column] = self.encoder.transform(self.X[self.column].astype(str))
             self.X.loc[self.X[self.column].isnull(), self.out_column] = np.nan
-        elif self.type == 'onehot':
+        elif self.method == 'onehot':
             enc_df = pd.DataFrame(self.encoder.transform(np.array(self.X[self.column].astype(str)).reshape(-1, 1)))
             self.X = self.X.join(enc_df, rsuffix='_onehot')
 

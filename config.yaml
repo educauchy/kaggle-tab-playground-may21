@@ -15,15 +15,15 @@ model:
   encoding:
     - column: 'feature_13'
       out_column: 'feature_13_enc'
-      type: 'label'
+      method: 'label'
       data: False
     - column: 'feature_22'
       out_column: 'feature_22_enc'
-      type: 'label'
+      method: 'label'
       data: False
     - column: 'feature_36'
       out_column: 'feature_36_enc'
-      type: 'label'
+      method: 'label'
       data: False
   f_inter:
     params:
@@ -34,18 +34,15 @@ model:
     params:
       n_features: 50
   anomaly:
-#    type: 'lof'
-#    params:
-#      n_neighbors: 5
-    type: 'isoforest'
+    method: 'isoforest'
     params:
       n_estimators: 300
-#  cluster:
-#    type: 'DBSCAN'
-#    params:
-#      eps: 1.2
+  cluster:
+    method: 'DBSCAN'
+    params:
+      eps: 1.2
   model:
-    type: 'LGBM'
+    method: 'LGBM'
     params:
       max_depth: 1
       n_estimators: 500

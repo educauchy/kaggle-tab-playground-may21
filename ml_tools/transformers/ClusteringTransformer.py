@@ -3,13 +3,13 @@ from sklearn.cluster import DBSCAN
 
 
 class ClusteringTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, type: str = 'DBSCAN', **params):
+    def __init__(self, method: str = 'DBSCAN', **params):
         super().__init__()
-        self.type = type
+        self.method = method
         self.methods = {
             'DBSCAN': DBSCAN,
         }
-        self.method = self.methods[type](**params)
+        self.method = self.methods[method](**params)
 
     def fit(self, X, y=None):
         return self
