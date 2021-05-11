@@ -10,6 +10,9 @@ class FeatureInteractionTransformer(BaseEstimator, TransformerMixin):
                         include_bias: bool = False,
                         exclude_cols: bool = None):
         super().__init__()
+        self.degree = degree
+        self.interaction_only = interaction_only
+        self.include_bias = include_bias
         self.exclude_cols = exclude_cols
         self.creator = PolynomialFeatures(degree=degree, interaction_only=interaction_only, include_bias=include_bias)
 

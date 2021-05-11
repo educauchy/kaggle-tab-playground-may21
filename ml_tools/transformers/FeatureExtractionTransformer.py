@@ -15,7 +15,5 @@ class FeatureExtractionTransformer(BaseEstimator, TransformerMixin):
         self.X = X.copy()
         np.seterr(divide='ignore')
         for col_name in self.X.columns:
-            self.X[col_name + '_Log'] = np.log10(self.X[col_name] + min(self.X[col_name]) + 100000).astype('float32')
-        self.X.replace([-np.inf], -100000, inplace=True)
-        self.X.replace([np.inf], 100000, inplace=True)
+            self.X[col_name + '_Log'] = np.log10(self.X[col_name] - min(self.X[col_name]) + 1).astype('float32')
         return self.X

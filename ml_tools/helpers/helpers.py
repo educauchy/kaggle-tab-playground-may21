@@ -18,8 +18,8 @@ short_names = {
 
 def gen_submit(config: dict, score_test: float) -> str:
     output = str(score_test) + '_' + \
-             short_names[config['model']['anomaly']['type']] + '_' + \
-             short_names[config['model']['model']['type']] + '_' + \
+             short_names[config['model']['anomaly']['method']] + '_' + \
+             short_names[config['model']['model']['method']] + '_' + \
              str(random.randint(1, 10000000))
              # short_names[config['model']['impute']['type']] + '_' + \
              # short_names[config['model']['cluster']['type']] + '_' + \
