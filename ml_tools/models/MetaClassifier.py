@@ -9,7 +9,7 @@ from lightgbm import LGBMClassifier
 
 
 class MetaClassifier(ClassifierMixin):
-    def __init__(self, model: str = 'RF', **params):
+    def __init__(self, model: str = 'RF', random_state=None, params=None):
         super().__init__()
         self.models = {
             'RF': RandomForestClassifier,
@@ -22,7 +22,17 @@ class MetaClassifier(ClassifierMixin):
             'Bagging': BaggingClassifier,
             'LGBM': LGBMClassifier,
         }
-        self.model = self.models[model](**params)
+
+        if model == 'Stacking':
+            print('yes')
+            estimators = []
+            for param in params:
+                model_params = param['params'] if param['params'] is not None else {}
+                estimators.append( (param['name'], self.models[param['name']](**model_params)) )
+            self.model = self.models[model](estimators=estimators, final_estimator = LogisticRegression(max_iter=10000))
+        else:
+            self.model = self.models[model](random_state=random_state, **params)
+
         print('Model:')
         print(self.model)
         print('-----------------------')
