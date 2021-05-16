@@ -11,7 +11,17 @@ import numpy as np
 import yaml
 import os, sys
 from shutil import copyfile
-from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import SMOTE, ADASYN
+from hyperopt import hp, fmin, tpe, Trials, space_eval
+
+
+
+
+def objective(params):
+    full_pipeline.set_params(**params)
+    cv = KFold(n_splits=config['model']['cv']['folds'], shuffle=True)
+    score = cross_val_score(full_pipeline, X, y, cv=cv, scoring='neg_log_loss', n_jobs=1)
+    return score.mean()
 
 
 try:
@@ -37,15 +47,24 @@ X.drop(['id'], axis=1, inplace=True)
 y = train[config['data']['target']]
 y = pd.Series(y.str.split('_', expand=True)[1], dtype=np.int64, name='target')
 
-sm = SMOTE(sampling_strategy='minority', random_state=config['model']['random_state'], k_neighbors=10, n_jobs=-1)
-X, y = sm.fit_resample(X, y)
-
 X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=config['data']['train_size'], \
                                                     random_state=config['model']['random_state'])
 
+# sm = SMOTE(random_state=config['model']['random_state'],
+#           sampling_strategy='minority',
+#            k_neighbors=10,
+#            n_jobs=-1)
+# sm = ADASYN(random_state=config['model']['random_state'],
+#           sampling_strategy='minority',
+#            n_neighbors=10,
+#            n_jobs=-1)
+# X_train, y_train = sm.fit_resample(X_train, y_train)
+
+# print(X_train.shape)
+
 
 full_pipeline = Pipeline(steps=[
-    ('f_extraction', FeatureExtractionTransformer(log_base=2)),
+    ('f_extraction', FeatureExtractionTransformer(log_base=10)),
     ('anomaly', AnomalyDetectionTransformer(method=config['model']['anomaly']['method'], \
                                             random_state=config['model']['random_state'], \
                                             **config['model']['anomaly']['params'])),
@@ -60,18 +79,45 @@ if config['model']['strategy'] == 'grid':
         full_pipeline = RandomizedSearchCV(full_pipeline, config['model']['param_grid'], **config['model']['grid'],\
                                         random_state=config['model']['random_state'])
     else:
-        full_pipeline = GridSearchCV(full_pipeline, config['model']['param_grid'], **config['model']['grid'],\
-                                        random_state=config['model']['random_state'])
+        full_pipeline = GridSearchCV(full_pipeline, config['model']['param_grid'], **config['model']['grid'])
     full_pipeline.fit(X, y)
     print(full_pipeline.best_params_)
-    y_pred = full_pipeline.predict_proba(X_test)
-    test_score = log_loss(y_test, y_pred)
-    print('Log-Loss: ' + str(test_score))
 elif config['model']['strategy'] == 'model':
+    cv = KFold(n_splits=config['model']['cv']['folds'], shuffle=True, random_state=config['model']['random_state'])
+    scores = cross_val_score(full_pipeline, X, y, scoring='neg_log_loss', cv=cv)
+    print('Cross-validation scores:')
+    print(scores)
+    print('Cross-validation average score:')
+    print(np.mean(scores))
     full_pipeline.fit(X_train, y_train)
-    y_pred = full_pipeline.predict_proba(X_test)
-    test_score = log_loss(y_test, y_pred)
-    print('Log-Loss: ' + str(test_score))
+elif config['model']['strategy'] == 'hyperopt':
+    space = {}
+    for param, values in config['model']['param_hyperopt'].items():
+        if len(values) > 3:
+            space[param] = values
+        else:
+            space[param] = np.arange(*values)
+    # The Trials object will store details of each iteration
+    trials = Trials()
+    # Run the hyperparameter search using the tpe algorithm
+    best = fmin(objective,
+                space,
+                algo=tpe.suggest,
+                max_evals=200,
+                trials=trials)
+
+    # Get the values of the optimal parameters
+    best_params = space_eval(space, best)
+    print('Best params')
+    print(best_params)
+
+    # Fit the model with the optimal hyperparamters
+    full_pipeline.set_params(**best_params)
+    full_pipeline.fit(X, y);
+
+y_pred = full_pipeline.predict_proba(X_test)
+test_score = log_loss(y_test, y_pred)
+print('Log-Loss: ' + str(test_score))
 
 
 if config['output']['save']:
