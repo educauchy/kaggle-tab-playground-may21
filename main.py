@@ -50,21 +50,18 @@ y = pd.Series(y.str.split('_', expand=True)[1], dtype=np.int64, name='target')
 X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=config['data']['train_size'], \
                                                     random_state=config['model']['random_state'])
 
-# sm = SMOTE(random_state=config['model']['random_state'],
-#           sampling_strategy='minority',
-#            k_neighbors=10,
-#            n_jobs=-1)
-# sm = ADASYN(random_state=config['model']['random_state'],
-#           sampling_strategy='minority',
-#            n_neighbors=10,
-#            n_jobs=-1)
-# X_train, y_train = sm.fit_resample(X_train, y_train)
 
-# print(X_train.shape)
-
-
+f_ext_columns_num = [14, 15, 6, 16, 31, 37, 28, 25, 2]
+f_ext_columns = ['feature_' + str(num) for num in f_ext_columns_num]
 full_pipeline = Pipeline(steps=[
-    ('f_extraction', FeatureExtractionTransformer(log_base=10)),
+    ('f_extraction', FeatureExtractionTransformer(include_log=config['model']['f_ext']['include_log'], \
+                                                  include_perm=config['model']['f_ext']['include_perm'],\
+                                                  log_base=config['model']['f_ext']['log_base'],\
+                                                  perm_level=config['model']['f_ext']['perm_level'],\
+                                                  columns=f_ext_columns)),
+    ('f_selection', FeatureSelectionTransformer(method=config['model']['f_selection']['method'],\
+                                               metric=config['model']['f_selection']['params']['metric'],\
+                                               n_features=config['model']['f_selection']['params']['n_features'])),
     ('anomaly', AnomalyDetectionTransformer(method=config['model']['anomaly']['method'], \
                                             random_state=config['model']['random_state'], \
                                             **config['model']['anomaly']['params'])),
@@ -82,13 +79,15 @@ if config['model']['strategy'] == 'grid':
         full_pipeline = GridSearchCV(full_pipeline, config['model']['param_grid'], **config['model']['grid'])
     full_pipeline.fit(X, y)
     print(full_pipeline.best_params_)
-elif config['model']['strategy'] == 'model':
+elif config['model']['strategy'] == 'cv':
     cv = KFold(n_splits=config['model']['cv']['folds'], shuffle=True, random_state=config['model']['random_state'])
     scores = cross_val_score(full_pipeline, X, y, scoring='neg_log_loss', cv=cv)
     print('Cross-validation scores:')
     print(scores)
     print('Cross-validation average score:')
     print(np.mean(scores))
+    full_pipeline.fit(X_train, y_train)
+elif config['model']['strategy'] == 'model':
     full_pipeline.fit(X_train, y_train)
 elif config['model']['strategy'] == 'hyperopt':
     space = {}
@@ -103,7 +102,7 @@ elif config['model']['strategy'] == 'hyperopt':
     best = fmin(objective,
                 space,
                 algo=tpe.suggest,
-                max_evals=200,
+                max_evals=30,
                 trials=trials)
 
     # Get the values of the optimal parameters
