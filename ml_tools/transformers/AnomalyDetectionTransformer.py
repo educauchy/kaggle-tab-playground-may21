@@ -6,10 +6,12 @@ from sklearn.svm import OneClassSVM
 
 class AnomalyDetectionTransformer(BaseEstimator, TransformerMixin):
     def __init__(self, method: str = 'isoforest',
+                        verbose: bool = False,
                         columns: list = None,
                         **params):
         super().__init__()
         self.method = method
+        self.verbose = verbose
         self.detectors = {
             'isoforest': IsolationForest,
             'lof': LocalOutlierFactor,
@@ -19,11 +21,13 @@ class AnomalyDetectionTransformer(BaseEstimator, TransformerMixin):
         self.detector = self.detectors[method](**params)
 
     def fit(self, X, y=None):
-        print(self.detector)
+        if self.verbose:
+            print(self.detector)
         self.X = X.copy()
         self.X['Is_Anomaly'] = self.detector.fit_predict(self.X)
-        print('Anomalies found: ' + str(self.X[self.X.Is_Anomaly == -1].shape[0]))
-        print('')
+        if self.verbose:
+            print('Anomalies found: ' + str(self.X[self.X.Is_Anomaly == -1].shape[0]))
+            print('')
         return self
 
     def transform(self, X, y=None):

@@ -51,7 +51,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=config['dat
                                                     random_state=config['model']['random_state'])
 
 
-f_ext_columns_num = [14, 15, 6, 16, 31, 37, 28, 25, 2]
+f_ext_columns_num = config['model']['f_ext']['columns']
 f_ext_columns = ['feature_' + str(num) for num in f_ext_columns_num]
 full_pipeline = Pipeline(steps=[
     ('f_extraction', FeatureExtractionTransformer(include_log=config['model']['f_ext']['include_log'], \
@@ -81,11 +81,13 @@ if config['model']['strategy'] == 'grid':
     print(full_pipeline.best_params_)
 elif config['model']['strategy'] == 'cv':
     cv = KFold(n_splits=config['model']['cv']['folds'], shuffle=True, random_state=config['model']['random_state'])
-    scores = cross_val_score(full_pipeline, X, y, scoring='neg_log_loss', cv=cv)
+    scores = cross_val_score(full_pipeline, X_train, y_train, scoring='neg_log_loss', cv=cv)
+    print('////////////////////////')
     print('Cross-validation scores:')
     print(scores)
     print('Cross-validation average score:')
     print(np.mean(scores))
+    print('////////////////////////')
     full_pipeline.fit(X_train, y_train)
 elif config['model']['strategy'] == 'model':
     full_pipeline.fit(X_train, y_train)
@@ -102,7 +104,7 @@ elif config['model']['strategy'] == 'hyperopt':
     best = fmin(objective,
                 space,
                 algo=tpe.suggest,
-                max_evals=30,
+                max_evals=config['model']['hyperopt']['max_evals'],
                 trials=trials)
 
     # Get the values of the optimal parameters
@@ -112,11 +114,13 @@ elif config['model']['strategy'] == 'hyperopt':
 
     # Fit the model with the optimal hyperparamters
     full_pipeline.set_params(**best_params)
-    full_pipeline.fit(X, y);
+    full_pipeline.fit(X_train, y_train);
 
 y_pred = full_pipeline.predict_proba(X_test)
 test_score = log_loss(y_test, y_pred)
+print('//////////////////////////////')
 print('Log-Loss: ' + str(test_score))
+print('//////////////////////////////')
 
 
 if config['output']['save']:
