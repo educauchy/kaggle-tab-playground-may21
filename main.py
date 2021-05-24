@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSe
 from sklearn.metrics import log_loss
 from sklearn.feature_selection import SelectKBest, mutual_info_classif
 
+import logging
 import pandas as pd
 import numpy as np
 import yaml
@@ -15,6 +16,7 @@ from imblearn.over_sampling import SMOTE, ADASYN
 from hyperopt import hp, fmin, tpe, Trials, space_eval
 
 
+logging.basicConfig(level=logging.DEBUG)
 
 
 def objective(params):
@@ -31,10 +33,10 @@ try:
     with open (config_file, 'r') as file:
         config = yaml.safe_load(file)
 except yaml.YAMLError as exc:
-    print(exc)
+    logging.error(exec)
     sys.exit(1)
 except Exception as e:
-    print('Error reading the config file')
+    logging.error('Error reading the config file')
     sys.exit(1)
 
 
@@ -66,6 +68,7 @@ full_pipeline = Pipeline(steps=[
                                             random_state=config['model']['random_state'], \
                                             **config['model']['anomaly']['params'])),
     ('model', MetaClassifier(model=config['model']['model']['method'], \
+                             verbose=config['model']['model']['verbose'], \
                              random_state=config['model']['random_state'], \
                              params=config['model']['model']['params']
                              )),
@@ -82,12 +85,10 @@ if config['model']['strategy'] == 'grid':
 elif config['model']['strategy'] == 'cv':
     cv = KFold(n_splits=config['model']['cv']['folds'], shuffle=True, random_state=config['model']['random_state'])
     scores = cross_val_score(full_pipeline, X_train, y_train, scoring='neg_log_loss', cv=cv)
-    print('////////////////////////')
-    print('Cross-validation scores:')
-    print(scores)
-    print('Cross-validation average score:')
-    print(np.mean(scores))
-    print('////////////////////////')
+    # print('Cross-validation scores:')
+    # print(scores)
+    logging.info('Cross-validation scores: [%s]', ', '.join(scores))
+    logging.info('Cross-validation average score: %s', np.round(np.mean(scores), 6))
     full_pipeline.fit(X_train, y_train)
 elif config['model']['strategy'] == 'model':
     full_pipeline.fit(X_train, y_train)
@@ -106,21 +107,17 @@ elif config['model']['strategy'] == 'hyperopt':
                 algo=tpe.suggest,
                 max_evals=config['model']['hyperopt']['max_evals'],
                 trials=trials)
-
     # Get the values of the optimal parameters
     best_params = space_eval(space, best)
-    print('Best params')
-    print(best_params)
-
+    logging.info('Best params')
+    logging.info(best_params)
     # Fit the model with the optimal hyperparamters
     full_pipeline.set_params(**best_params)
     full_pipeline.fit(X_train, y_train);
 
 y_pred = full_pipeline.predict_proba(X_test)
 test_score = log_loss(y_test, y_pred)
-print('//////////////////////////////')
-print('Log-Loss: ' + str(test_score))
-print('//////////////////////////////')
+logging.info('Log-loss: %s', test_score)
 
 
 if config['output']['save']:
