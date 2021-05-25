@@ -5,12 +5,16 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import LinearSVC
 from lightgbm import LGBMClassifier
+from ml_tools.helpers import Logging
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
-
-class MetaClassifier(ClassifierMixin):
-    def __init__(self, model: str = 'RF', random_state=None, params=None):
+class MetaClassifier(ClassifierMixin, Logging):
+    def __init__(self, model: str = 'RF', verbose=False, random_state=None, params=None):
         super().__init__()
+        self.verbose = verbose
         self.models = {
             'RF': RandomForestClassifier,
             'LogReg': LogisticRegression,
@@ -24,7 +28,6 @@ class MetaClassifier(ClassifierMixin):
         }
 
         if model == 'Stacking':
-            print('yes')
             estimators = []
             for param in params:
                 model_params = param['params'] if param['params'] is not None else {}
@@ -33,12 +36,13 @@ class MetaClassifier(ClassifierMixin):
         else:
             self.model = self.models[model](random_state=random_state, **params)
 
-        print('Model:')
-        print(self.model)
-        print('-----------------------')
+        if verbose:
+            logging.info(self.model)
 
+    @Logging.logging_output('model')
     def fit(self, X, y=None):
-        print('Fitting model begins...')
+        if self.verbose:
+            logging.info('Fitting model begins...')
         self.X = X.copy()
         self.y = y.copy()
         self.y.reset_index(drop=True, inplace=True)
@@ -50,8 +54,8 @@ class MetaClassifier(ClassifierMixin):
         self.X.reset_index(drop=True, inplace=True)
         self.y.reset_index(drop=True, inplace=True)
         self.model.fit(self.X, self.y)
-        print('Fitting model ended...')
-        print('')
+        if self.verbose:
+            logging.info('Fitting model ended...')
         return self
 
     def predict(self, X, y=None):
