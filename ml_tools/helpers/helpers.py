@@ -25,5 +25,16 @@ def gen_submit(config: dict, score_test: float) -> str:
              # short_names[config['model']['cluster']['type']] + '_' + \
     return output
 
+def logging_output(argument):
+    def decorator(function):
+        def wrapper(*args, **kwargs):
+            funny_stuff()
+            something_with_argument(argument)
+            result = function(*args, **kwargs)
+            more_funny_stuff()
+            return result
+        return wrapper
+    return decorator
+
 def save_submit() -> None:
     pass

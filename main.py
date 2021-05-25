@@ -85,8 +85,6 @@ if config['model']['strategy'] == 'grid':
 elif config['model']['strategy'] == 'cv':
     cv = KFold(n_splits=config['model']['cv']['folds'], shuffle=True, random_state=config['model']['random_state'])
     scores = cross_val_score(full_pipeline, X_train, y_train, scoring='neg_log_loss', cv=cv)
-    # print('Cross-validation scores:')
-    # print(scores)
     logging.info('Cross-validation scores: [%s]', ', '.join(scores))
     logging.info('Cross-validation average score: %s', np.round(np.mean(scores), 6))
     full_pipeline.fit(X_train, y_train)

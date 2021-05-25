@@ -3,6 +3,7 @@ from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import KNNImputer, SimpleImputer, IterativeImputer
 import pandas as pd
 import numpy as np
+from ml_tools.helpers import Logging
 
 
 class ImputeTransformer(BaseEstimator, TransformerMixin):
@@ -30,17 +31,12 @@ class ImputeTransformer(BaseEstimator, TransformerMixin):
         return X
 
 
+    @Logging.logging_output('imputation')
     def fit(self, X, y=None):
         print(self.imputer)
-        print(X.isnull().sum())
-        print('Imputing begins...')
-
         for by_col in self.by_cols:
             X = self._impute_by_cols(X, by_col)
-
         self.imputer.fit(X, y)
-        print('Imputing ended...')
-        print('')
         return self
 
     def transform(self, X, y=None):

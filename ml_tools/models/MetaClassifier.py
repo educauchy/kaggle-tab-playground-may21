@@ -6,9 +6,6 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import LinearSVC
 from lightgbm import LGBMClassifier
 from ml_tools.helpers import Logging
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 class MetaClassifier(ClassifierMixin, Logging):
@@ -41,8 +38,6 @@ class MetaClassifier(ClassifierMixin, Logging):
 
     @Logging.logging_output('model')
     def fit(self, X, y=None):
-        if self.verbose:
-            logging.info('Fitting model begins...')
         self.X = X.copy()
         self.y = y.copy()
         self.y.reset_index(drop=True, inplace=True)
@@ -54,8 +49,6 @@ class MetaClassifier(ClassifierMixin, Logging):
         self.X.reset_index(drop=True, inplace=True)
         self.y.reset_index(drop=True, inplace=True)
         self.model.fit(self.X, self.y)
-        if self.verbose:
-            logging.info('Fitting model ended...')
         return self
 
     def predict(self, X, y=None):

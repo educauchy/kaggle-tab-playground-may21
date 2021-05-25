@@ -2,6 +2,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import PolynomialFeatures
 import pandas as pd
 import numpy as np
+from ml_tools.helpers import Logging
 
 
 class FeatureInteractionTransformer(BaseEstimator, TransformerMixin):
@@ -16,6 +17,7 @@ class FeatureInteractionTransformer(BaseEstimator, TransformerMixin):
         self.exclude_cols = exclude_cols
         self.creator = PolynomialFeatures(degree=degree, interaction_only=interaction_only, include_bias=include_bias)
 
+    @Logging.logging_output('interaction')
     def fit(self, X, y=None):
         self.creator.fit(X)
         return self

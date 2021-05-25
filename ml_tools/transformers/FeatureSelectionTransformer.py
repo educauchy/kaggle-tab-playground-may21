@@ -3,6 +3,7 @@ from sklearn.feature_selection import SequentialFeatureSelector
 from sklearn.feature_selection import SelectKBest, mutual_info_classif
 import pandas as pd
 import numpy as np
+from ml_tools.helpers import Logging
 
 
 class FeatureSelectionTransformer(BaseEstimator, TransformerMixin):
@@ -31,6 +32,7 @@ class FeatureSelectionTransformer(BaseEstimator, TransformerMixin):
         X_a = X_a.iloc[:X_a.shape[0] - 1, :n_best]
         return X_a
 
+    @Logging.logging_output('selection')
     def fit(self, X, y=None):
         self.selector.fit(X, y)
         self.scores = self.selector.scores_

@@ -2,6 +2,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, OrdinalEncoder
 import numpy as np
 import pandas as pd
+from ml_tools.helpers import Logging
 
 
 class EncoderTransformer(BaseEstimator, TransformerMixin):
@@ -21,6 +22,7 @@ class EncoderTransformer(BaseEstimator, TransformerMixin):
         }
         self.encoder = self.encoders[method]
 
+    @Logging.logging_output('endoding')
     def fit(self, X, y=None):
         self.X = X.copy()
         if self.data is None:
