@@ -9,7 +9,8 @@ class EncoderTransformer(BaseEstimator, TransformerMixin):
     def __init__(self, method: str = 'label',
                         column: str = '',
                         out_column: str = '',
-                        data: pd.Series = None):
+                        data: pd.Series = None,
+                        random_state: int = None):
         super().__init__()
         self.method = method
         self.column = column

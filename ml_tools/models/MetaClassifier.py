@@ -6,11 +6,14 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import LinearSVC
 from lightgbm import LGBMClassifier
 from ml_tools.helpers import Logging
+from typing import Dict, Any
 
 
 class MetaClassifier(ClassifierMixin, Logging):
-    def __init__(self, model: str = 'RF', verbose=False, random_state=None, params=None):
+    def __init__(self, model: str = 'RF', params: Dict[str, Any] = None,
+                 random_state: int = None, verbose: bool = False):
         super().__init__()
+        self.random_state = random_state
         self.verbose = verbose
         self.models = {
             'RF': RandomForestClassifier,
@@ -31,12 +34,12 @@ class MetaClassifier(ClassifierMixin, Logging):
                 estimators.append( (param['name'], self.models[param['name']](**model_params)) )
             self.model = self.models[model](estimators=estimators, final_estimator = LogisticRegression(max_iter=10000))
         else:
-            self.model = self.models[model](random_state=random_state, **params)
+            self.model = self.models[model](**params, random_state=random_state)
 
         if verbose:
-            logging.info(self.model)
+            print(self.model)
 
-    @Logging.logging_output('model')
+    # @Logging.logging_output('model')
     def fit(self, X, y=None):
         self.X = X.copy()
         self.y = y.copy()

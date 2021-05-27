@@ -3,10 +3,14 @@ import numpy as np
 import pandas as pd
 from scipy.stats import boxcox
 from itertools import permutations
+from typing import List
+
 
 class FeatureExtractionTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, include_log=True, include_perm=False, log_base=10, perm_level=2, columns=None):
+    def __init__(self, include_log: bool = True, include_perm: bool = False, log_base: int = 10, perm_level: bool = 2,
+                 random_state: int = None, columns: List[str] = None):
         super().__init__()
+        self.random_state = random_state
         self.include_log = include_log
         self.include_perm = include_perm
         self.log_base = log_base

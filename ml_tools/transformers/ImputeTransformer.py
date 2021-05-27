@@ -4,12 +4,11 @@ from sklearn.impute import KNNImputer, SimpleImputer, IterativeImputer
 import pandas as pd
 import numpy as np
 from ml_tools.helpers import Logging
+from typing import Dict
 
 
 class ImputeTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, method: str = 'KNN',
-                        by_cols: dict = None,
-                        **params):
+    def __init__(self, method: str = 'KNN', by_cols: Dict[str, str] = None, random_state: int = None, **params):
         super().__init__()
         self.method = method
         self.by_cols = by_cols

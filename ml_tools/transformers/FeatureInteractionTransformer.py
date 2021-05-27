@@ -6,10 +6,8 @@ from ml_tools.helpers import Logging
 
 
 class FeatureInteractionTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, degree: int = 1,
-                        interaction_only: bool = True,
-                        include_bias: bool = False,
-                        exclude_cols: bool = None):
+    def __init__(self, degree: int = 1, interaction_only: bool = True, include_bias: bool = False,
+                        exclude_cols: bool = None, random_state: int = None):
         super().__init__()
         self.degree = degree
         self.interaction_only = interaction_only

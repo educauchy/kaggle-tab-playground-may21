@@ -8,10 +8,10 @@ from ml_tools.helpers import Logging
 
 class FeatureSelectionTransformer(BaseEstimator, TransformerMixin):
     def __init__(self, method: str = 'kbest', metric: str = 'mutual_info_classif',
-                 n_features: int = 10, columns: list = None):
+                 n_features: int = 10, random_state: int = None):
         super().__init__()
-        self.columns = columns
         self.n_features = n_features
+        self.random_state = random_state
         self.method = method
         self.metric = metric
         self.scores = []

@@ -4,15 +4,13 @@ from ml_tools.helpers import *
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV, KFold, cross_val_score
 from sklearn.metrics import log_loss
-from sklearn.feature_selection import SelectKBest, mutual_info_classif
-
+from typing import Dict, Any
 import logging
 import pandas as pd
 import numpy as np
 import yaml
 import os, sys
 from shutil import copyfile
-from imblearn.over_sampling import SMOTE, ADASYN
 from hyperopt import hp, fmin, tpe, Trials, space_eval
 
 
@@ -53,26 +51,33 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=config['dat
                                                     random_state=config['model']['random_state'])
 
 
-f_ext_columns_num = config['model']['f_ext']['columns']
-f_ext_columns = ['feature_' + str(num) for num in f_ext_columns_num]
-full_pipeline = Pipeline(steps=[
-    ('f_extraction', FeatureExtractionTransformer(include_log=config['model']['f_ext']['include_log'], \
-                                                  include_perm=config['model']['f_ext']['include_perm'],\
-                                                  log_base=config['model']['f_ext']['log_base'],\
-                                                  perm_level=config['model']['f_ext']['perm_level'],\
-                                                  columns=f_ext_columns)),
-    ('f_selection', FeatureSelectionTransformer(method=config['model']['f_selection']['method'],\
-                                               metric=config['model']['f_selection']['params']['metric'],\
-                                               n_features=config['model']['f_selection']['params']['n_features'])),
-    ('anomaly', AnomalyDetectionTransformer(method=config['model']['anomaly']['method'], \
-                                            random_state=config['model']['random_state'], \
-                                            **config['model']['anomaly']['params'])),
-    ('model', MetaClassifier(model=config['model']['model']['method'], \
-                             verbose=config['model']['model']['verbose'], \
-                             random_state=config['model']['random_state'], \
-                             params=config['model']['model']['params']
-                             )),
-])
+if config['model']['f_ext']['to_use']:
+    f_ext_columns_num = config['model']['f_ext']['columns']
+    f_ext_columns = ['feature_' + str(num) for num in f_ext_columns_num]
+    config['model']['f_ext']['params']['columns'] = f_ext_columns
+
+
+pipeline_steps_list: Dict[str, Any] = {
+    'f_ext': FeatureExtractionTransformer,
+    'f_sel': FeatureSelectionTransformer,
+    'f_int': FeatureInteractionTransformer,
+    'anomaly': AnomalyDetectionTransformer,
+    'model': MetaClassifier,
+}
+pipeline_steps = []
+for step_name, transformer in pipeline_steps_list.items():
+    if config['model'][step_name]['to_use']:
+        if step_name != 'model':
+            step = (step_name, transformer(**config['model'][step_name]['params'],
+                                           random_state=config['model']['random_state']))
+        else:
+            step = (step_name, transformer(model=config['model'][step_name]['method'],
+                                           params=config['model'][step_name]['params'],
+                                           verbose=config['model'][step_name]['verbose'],
+                                           random_state = config['model']['random_state']))
+        pipeline_steps.append(step)
+full_pipeline = Pipeline(steps=pipeline_steps)
+
 
 if config['model']['strategy'] == 'grid':
     if config['model']['grid_random']:

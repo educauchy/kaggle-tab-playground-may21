@@ -1,9 +1,10 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 import warnings
+from typing import List
 
 
 class DropColumnsTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, columns: list = None):
+    def __init__(self, columns: List[str] = None):
         super().__init__()
         self.columns = columns
         if (columns is None or len(columns) == 0):

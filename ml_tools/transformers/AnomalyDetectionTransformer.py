@@ -9,8 +9,10 @@ class AnomalyDetectionTransformer(BaseEstimator, TransformerMixin):
     def __init__(self, method: str = 'isoforest',
                         verbose: bool = False,
                         columns: list = None,
+                        random_state: int = None,
                         **params):
         super().__init__()
+        self.random_state = random_state
         self.method = method
         self.verbose = verbose
         self.detectors = {
